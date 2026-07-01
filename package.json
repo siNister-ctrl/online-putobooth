@@ -2,10 +2,12 @@
   "name": "couple-booth",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "socket-server": "node server.js"
   },
   "dependencies": {
     "next": "14.2.21",

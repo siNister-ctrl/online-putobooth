@@ -97,7 +97,8 @@ export default function Home() {
 
   // ─── Socket ───
   useEffect(() => {
-    const s = io({ path: '/api/socket' });
+    const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4000";
+    const s = io(SOCKET_URL);
     setSocket(s);
 
 // Auto-join if there is a pending room code from URL
