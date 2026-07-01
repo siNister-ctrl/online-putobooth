@@ -236,12 +236,20 @@ export default function Home() {
     setPage('lobby');
   };
   const joinRoom = () => {
-    const code = joinInput.trim().toUpperCase();
-    if (!code || code.length !== 6) return showToast('Enter a valid 6-character code');
-    setRoomCode(code); setMyRole('b'); setMyColor('blue');
-    socket?.emit('join-room', { roomCode: code });
-    setPage('lobby');
-  };
+  const code = joinInput.trim().toUpperCase();
+
+  if (!code || code.length !== 6) {
+    return showToast('Enter a valid 6-character code');
+  }
+
+  setRoomCode(code);
+  setMyRole('b');
+  setMyColor('blue');
+
+  socket?.emit('join-room', { roomCode: code });
+
+  setPage('lobby');
+};
   const setName = (name) => { setMyName(name); socket?.emit('set-name', { name }); };
   const setMyColorFn = (color) => { setMyColor(color); socket?.emit('set-color', { color }); };
   const voteLayout = (layout) => { socket?.emit('vote-layout', { layout }); };
@@ -481,10 +489,28 @@ window.removeEventListener("touchend", onUp);
   const votesMatch = aVote && bVote && aVote === bVote;
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const room = params.get('room');
-    if (room) { setJoinInput(room); setShowJoin(true); }
-  }, []);
+  if (!socket) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const room = params.get('room');
+
+  if (!room) return;
+
+  const code = room.trim().toUpperCase();
+
+  setJoinInput(code);
+  setShowJoin(true);
+
+  if (!myRole && code.length === 6) {
+    setRoomCode(code);
+    setMyRole('b');
+    setMyColor('blue');
+
+    socket.emit('join-room', { roomCode: code });
+
+    setPage('lobby');
+  }
+}, [socket, myRole]);
 
   return (
     <>
