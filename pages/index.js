@@ -89,6 +89,7 @@ export default function Home() {
 
  const exportCanvasRef = useRef(null);
   const dragRef = useRef({ idx: -1, el: null, startX: 0, startY: 0, startStickerX: 0, startStickerY: 0 });
+ const pendingJoinRef = useRef(null);
   // Keep refs in sync
   useEffect(() => { photoIdxRef.current = currentPhotoIdx; }, [currentPhotoIdx]);
   useEffect(() => { photosRef.current = photos; }, [photos]);
@@ -98,6 +99,18 @@ export default function Home() {
   useEffect(() => {
     const s = io({ path: '/api/socket' });
     setSocket(s);
+
+// Auto-join if there is a pending room code from URL
+if (pendingJoinRef.current && !myRole) {
+const code = pendingJoinRef.current;
+pendingJoinRef.current = null;
+setRoomCode(code);
+setMyRole("b");
+setMyColor("blue");
+s.emit("join-room", { roomCode: code });
+setPage("lobby");
+}
+
 
     s.on('room-state', (state) => {
       setLockedLayout(state.lockedLayout || false);
@@ -480,22 +493,19 @@ window.removeEventListener("touchend", onUp);
   const bVote = layoutVotes['b'];
   const votesMatch = aVote && bVote && aVote === bVote;
 
+  // Read room code from URL and store in ref — actual join happens after socket connects
   useEffect(() => {
-    if (!socket) return;
     const params = new URLSearchParams(window.location.search);
     const room = params.get('room');
     if (!room) return;
     const code = room.trim().toUpperCase();
-    setJoinInput(code);
-    setShowJoin(true);
-    if (!myRole && code.length === 6) {
-      setRoomCode(code);
-      setMyRole('b');
-      setMyColor('blue');
-      socket.emit('join-room', { roomCode: code });
-      setPage('lobby');
+    if (code.length === 6) {
+      pendingJoinRef.current = code;
+      setJoinInput(code);
+      setShowJoin(true);
     }
-  }, [socket, myRole]);
+  }, []);
+
 
 
   return (
